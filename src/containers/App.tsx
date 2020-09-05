@@ -1,32 +1,35 @@
-import React, { useEffect, useState } from "react";
-import { Robot } from "../interfaces/robot";
+import React, { useEffect, ChangeEvent } from "react";
 import CardList from "../components/CardList";
 import "./App.css";
 import SearchBox from "../components/SearchBox";
 import Scroll from "../components/Scroll";
+import { useSelector, useDispatch } from "react-redux";
+import { RobotsState } from "../robotsReducer";
+import { changeSearch, fetchRobots } from "../actions";
 function App() {
-  const [robots, setRobots] = useState<Robot[]>([]);
-  const [search, setSearch] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const getRobots = async () => {
-    setLoading(true);
-    const res = await fetch("https://jsonplaceholder.typicode.com/users");
-    const json = await res.json();
-    setRobots(json);
-    setLoading(false);
-  };
+  const { search, robots, pending } = useSelector<RobotsState, RobotsState>(
+    (state) => state
+  );
+  const dispatch = useDispatch();
+  function onSearchChange(event: ChangeEvent<HTMLInputElement>) {
+    dispatch(changeSearch(event.target.value));
+  }
+  function onFetchRobots() {
+    dispatch(fetchRobots());
+  }
   useEffect(() => {
-    getRobots();
+    onFetchRobots();
+    // eslint-disable-next-line
   }, []);
   const filteredRobots = robots.filter((robot) =>
     robot.name.toLocaleLowerCase().includes(search)
   );
-  return loading ? (
+  return pending ? (
     <h1>Loading</h1>
   ) : (
     <div className="tc">
       <h1 className="f1">RobotFriends</h1>
-      <SearchBox change={(e) => setSearch(e.target.value)} />
+      <SearchBox change={onSearchChange} />
       <Scroll>
         <CardList robots={filteredRobots} />
       </Scroll>
